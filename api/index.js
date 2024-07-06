@@ -7,6 +7,7 @@ const dotenv = require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const User = require('./Models/User')
+const ws = require('ws')
  
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
@@ -29,15 +30,16 @@ app.get('/profile',(req,res) => {
         if(err) throw err;
         res.json(userData)
     })}
-    else{
-        res.status(401).json('No token')
-    }
+    // else{
+    //     res.status(401).json('No token')
+    // }
 })
 
 app.post('/login',async (req,res)=>{
     const {username, password} = req.body;
     const foundUser = await User.findOne({username: username})
-    const passOk = bcrypt.compare(password, foundUser.password)
+    if(foundUser){
+    const passOk =  bcrypt.compareSync(password, foundUser?.password)
     if(passOk){
         jwt.sign({userId: foundUser._id, username: foundUser.username},jwt_secret,(err,token)=>{
             if(err)
@@ -47,6 +49,7 @@ app.post('/login',async (req,res)=>{
             })
         })
     }
+}
 })
 
 app.post('/register',async (req,res) => {
@@ -67,4 +70,33 @@ app.get('/test',(req,res)=>{
     res.send('On the test route')
 })
 
-app.listen(4000, () => console.log('Listening on port 4000'))
+const server = app.listen(4000, () => console.log('Listening on port 4000'))
+
+const wss = new ws.Server({server})
+
+wss.on('connection', (connection,req) => {
+    console.log('connection request for ws received!')
+    console.log(req.headers)
+    const cookies = req.headers.cookie;
+    if(cookies){
+        const tokenCookieString = cookies.split(';').find(cookie => cookie.startsWith('token='))
+        // console.log(tokenCookieString)
+        if(tokenCookieString){
+            const token = tokenCookieString.split('=')[1]
+            jwt.verify(token,jwt_secret,(err,userData) => {
+                if(err) throw err;
+                const {username, userId} = userData;
+                connection.username = username;
+                connection.userId = userId;
+            })
+        }
+    }
+    [...wss.clients].forEach(client => {
+        client.send(JSON.stringify(
+            {
+                online: [...wss.clients].map(c => ({userId:c.userId, username: c.username}))
+            }
+        ))
+    })
+
+})
