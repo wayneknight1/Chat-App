@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-
+import Avatar from "./Avatar";
 function Chat() {
     const [ws, setWs] = useState(null);
     const [onlinePeople, setOnlinePeople] = useState([]);
@@ -35,7 +35,10 @@ function Chat() {
 </svg>
 Find Friends</div>
             {Object.keys(onlinePeople).map(uId => {
-                return <div key={uId} className="border-b border-gray-100 py-2">{onlinePeople[uId]}</div>
+                return <div key={uId} className="border-b border-gray-100 py-2 flex items-center gap-2">
+                    <Avatar username = {onlinePeople[uId]} userId= {uId}/>
+                    <span>{onlinePeople[uId]}</span>
+                    </div>
             })}
         </div>
         <div className="flex flex-col bg-blue-300 w-2/3 p-2">
