@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const User = require('./Models/User')
 const ws = require('ws')
+const Message = require('./Models/Message')
  
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
@@ -75,6 +76,7 @@ const server = app.listen(4000, () => console.log('Listening on port 4000'))
 const wss = new ws.Server({server})
 
 wss.on('connection', (connection,req) => {
+    //read username and id from the from the cookie for connection
     console.log('connection request for ws received!')
     console.log(req.headers)
     const cookies = req.headers.cookie;
@@ -91,6 +93,7 @@ wss.on('connection', (connection,req) => {
             })
         }
     }
+
     [...wss.clients].forEach(client => {
         client.send(JSON.stringify(
             {
@@ -98,5 +101,24 @@ wss.on('connection', (connection,req) => {
             }
         ))
     })
+
+    connection.on('message',async (message) => {
+        const messageData = JSON.parse(message.toString())
+        const {recipient, text} = messageData;
+        if(recipient && text){
+         const messageDoc = await Message.create({
+                sender: connection.userId,
+                recipient,
+                text
+            });
+            [...wss.clients].filter(c => c.userId === recipient)
+            .forEach(c => c.send(JSON.stringify({
+                text, 
+                sender: connection.userId,
+                recipient,
+                id: messageDoc._id
+            })))
+        }
+    } )
 
 })
