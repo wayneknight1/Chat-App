@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Avatar from "./Avatar";
 import Logo from './Logo'
 import { useContext } from "react";
 import { UserContext } from "./UserContext";
 import {uniqBy} from 'lodash'
+import axios from "axios";
 
 function Chat() {
     const [ws, setWs] = useState(null);
@@ -13,11 +14,19 @@ function Chat() {
     const [newMessageText, setNewMessageText] = useState('');
     const [messages,setMessages] = useState([])
     const [messagesWithoutDupes, setMessagesWithoutDupes] = useState([]);
+
+    const messagesBoxRef = useRef(null)
     useEffect(() => {
         const wsT =new WebSocket('ws://localhost:4000')
         wsT.addEventListener('message', handleMessage)
         setWs(wsT)
     }, [])
+
+    useEffect(() => {
+        if(selectedId){
+            axios.get('/messages/'+selectedId)
+        }
+    }, [selectedId])
 
     useEffect(() => {
         setMessagesWithoutDupes(uniqBy(messages,'id'))
@@ -86,8 +95,9 @@ Find Friends</div>
                 {!selectedId && <div  className="flex h-full flex-grow items-center justify-center"> 
                     <div className="text-gray-500"> &larr; Please Select A Person</div> 
                 </div>}
-                {!!selectedId && (<div className="overflow-y-scroll"> 
-                    <div>
+                {!!selectedId && 
+                (<div className="relative h-full"> 
+                    <div ref={messagesBoxRef} className="overflow-y-scroll absolute inset-0 ">
                     {messagesWithoutDupes.map(message => (<div key={message.id} className={"p-2 m-2 rounded-sm"+(message.sender === id?' bg-blue-900 text-white':' bg-red-300 text-black')}>
                         {"sender: "+message.sender}<br/>
                         {"recipient: "+message.recipient}<br/>
