@@ -109,6 +109,33 @@ const wss = new ws.Server({server})
 
 wss.on('connection', (connection,req) => {
     //read username and id from the from the cookie for connection
+
+    function notifyAboutOnlinePeople(){
+        [...wss.clients].forEach(client => {
+            client.send(JSON.stringify(
+                {
+                    online: [...wss.clients].map(c => ({userId:c.userId, username: c.username}))
+                }
+            ))
+        })
+    }
+
+
+    connection.isAlive = true;
+    connection.timer = setInterval(() => {
+        connection.ping();
+        connection.deathTimer = setTimeout(() => {
+            connection.isAlive = false;
+            connection.terminate();
+            notifyAboutOnlinePeople()
+        },1000)
+    },10000)
+
+    connection.on('pong',() => {
+        clearInterval(connection.deathTimer)
+    })
+
+    
     console.log('connection request for ws received!')
     console.log(req.headers)
     const cookies = req.headers.cookie;
@@ -126,13 +153,15 @@ wss.on('connection', (connection,req) => {
         }
     }
 
-    [...wss.clients].forEach(client => {
-        client.send(JSON.stringify(
-            {
-                online: [...wss.clients].map(c => ({userId:c.userId, username: c.username}))
-            }
-        ))
-    })
+    notifyAboutOnlinePeople()
+
+    // [...wss.clients].forEach(client => {
+    //     client.send(JSON.stringify(
+    //         {
+    //             online: [...wss.clients].map(c => ({userId:c.userId, username: c.username}))
+    //         }
+    //     ))
+    // })
 
     connection.on('message',async (message) => {
         const messageData = JSON.parse(message.toString())
