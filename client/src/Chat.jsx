@@ -17,19 +17,31 @@ function Chat() {
 
     const messagesBoxRef = useRef(null)
     useEffect(() => {
+        connectToWs()
+    }, [])
+
+    function connectToWs(){
         const wsT =new WebSocket('ws://localhost:4000')
         wsT.addEventListener('message', handleMessage)
+        wsT.addEventListener('close',() => {
+            setTimeout(() => {
+                connectToWs()
+            },1000)
+        })
         setWs(wsT)
-    }, [])
+    }
 
     useEffect(() => {
         if(selectedId){
-            axios.get('/messages/'+selectedId)
+            axios.get('/messages/'+selectedId).then(res => {
+                console.log(res.data)
+                setMessages(res.data)
+            })
         }
     }, [selectedId])
 
     useEffect(() => {
-        setMessagesWithoutDupes(uniqBy(messages,'id'))
+        setMessagesWithoutDupes(uniqBy(messages,'_id'))
     },[messages])
 
     function showOnlinePeople(peopleArray){
@@ -64,7 +76,7 @@ function Chat() {
             text: newMessageText, 
             sender: id,
             recipient: selectedId,
-            id: Date.now()
+            _id: Date.now()
         }])
         setNewMessageText('')
     }
