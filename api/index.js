@@ -24,6 +24,11 @@ const jwt_secret = process.env.JWT_SECRET
 const bcryptSalt = bcrypt.genSaltSync(10)
 
 
+app.get('/people',async (req,res) => {
+    const users = await User.find({},{_id: 1, username: 1})
+    res.json(users)
+})
+
 app.get('/profile',(req,res) => {
     const token = req.cookies?.token
     if(token){
