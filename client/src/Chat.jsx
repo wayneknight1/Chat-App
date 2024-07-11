@@ -21,7 +21,7 @@ function Chat() {
     useEffect(() => {
         let temp;
         function connectToWs(){
-            const wsT =new WebSocket('ws://localhost:4000')
+            const wsT =new WebSocket('ws://chat-app-backend-5cfi.onrender.com')
             wsT.addEventListener('message', handleMessage)
             wsT.addEventListener('close',() => {
                 temp = setTimeout(() => {
