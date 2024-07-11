@@ -88,7 +88,8 @@ function Chat() {
             showOnlinePeople(messageData.online)
         }
         else{
-            setMessages(prev => [...prev, {...messageData}])
+            if(selectedId === messageData.sender){
+            setMessages(prev => [...prev, {...messageData}])}
         }
     }
 
