@@ -9,6 +9,9 @@ const bcrypt = require('bcryptjs')
 const User = require('./Models/User')
 const ws = require('ws')
 const Message = require('./Models/Message')
+
+const PORT = process.env.PORT || 4000
+
  
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
@@ -110,7 +113,7 @@ app.get('/test',(req,res)=>{
     res.send('On the test route')
 })
 
-const server = app.listen(4000, () => console.log('Listening on port 4000'))
+const server = app.listen(PORT, () => console.log('Listening on port 4000'))
 
 const wss = new ws.Server({server})
 
