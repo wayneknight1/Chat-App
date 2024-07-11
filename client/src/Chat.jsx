@@ -21,7 +21,7 @@ function Chat() {
     useEffect(() => {
         let temp;
         function connectToWs(){
-            const wsT =new WebSocket('ws://chat-app-backend-5cfi.onrender.com')
+            const wsT =new WebSocket('wss://chat-app-backend-5cfi.onrender.com')
             wsT.addEventListener('message', handleMessage)
             wsT.addEventListener('close',() => {
                 temp = setTimeout(() => {
@@ -92,10 +92,10 @@ function Chat() {
         }
     }
 
-    function sendMessage(e){
+    async function sendMessage(e){
         e.preventDefault();
         console.log('sending message');
-        ws.send(JSON.stringify({
+        await ws.send(JSON.stringify({
                 sender:id,
                 recipient: selectedId,
                 text: newMessageText

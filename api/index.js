@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 4000
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
 app.use(cors({
-  origin: true, // Allow requests from this origin
+   origin: ['https://668fd651c07f281d4b9188b9--kaleidoscopic-longma-bb201e.netlify.app'],
   credentials: true // Allow cookies to be sent
 }));
 
@@ -26,13 +26,27 @@ mongoose.connect(process.env.MONGO_URI).then(() =>{
 const jwt_secret = process.env.JWT_SECRET
 const bcryptSalt = bcrypt.genSaltSync(10)
 
+const verifyJWT = (req, res, next) => {
+    const token = req.cookies?.token;
+    if (token) {
+        jwt.verify(token, jwt_secret, (err, userData) => {
+            if (err) {
+                return res.status(403).json({ error: 'Token verification failed' });
+            }
+            req.userData = userData;
+            next();
+        });
+    } else {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+};
 
 app.get('/people',async (req,res) => {
     const users = await User.find({},{_id: 1, username: 1})
     res.json(users)
 })
 
-app.get('/profile',(req,res) => {
+app.get('/profile',verifyJWT,(req,res) => {
     const token = req.cookies?.token
     console.log('cookies in /profile are '+JSON.stringify(req.cookies))
     if(token){
