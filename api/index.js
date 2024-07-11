@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 4000
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
 app.use(cors({
-   origin: ['https://668fd651c07f281d4b9188b9--kaleidoscopic-longma-bb201e.netlify.app'],
+   origin: ['https://668fd651c07f281d4b9188b9--kaleidoscopic-longma-bb201e.netlify.app','http://localhost:5173'],
   credentials: true // Allow cookies to be sent
 }));
 
