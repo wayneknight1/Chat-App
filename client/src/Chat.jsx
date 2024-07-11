@@ -12,26 +12,40 @@ function Chat() {
     const [onlinePeople, setOnlinePeople] = useState([]);
     const [offlinePeople, setOfflinePeople] = useState([])
     const [selectedId, setSelectedId] = useState(null)
-    const {id} = useContext(UserContext)
+    const {id, setId, setUsername, username} = useContext(UserContext)
     const [newMessageText, setNewMessageText] = useState('');
     const [messages,setMessages] = useState([])
     const [messagesWithoutDupes, setMessagesWithoutDupes] = useState([]);
 
     const messagesBoxRef = useRef(null)
     useEffect(() => {
+        let temp;
+        function connectToWs(){
+            const wsT =new WebSocket('ws://localhost:4000')
+            wsT.addEventListener('message', handleMessage)
+            wsT.addEventListener('close',() => {
+                temp = setTimeout(() => {
+                    connectToWs()
+                },1000)
+            })
+            setWs(wsT)
+        }
         connectToWs()
+        return () =>{
+            clearInterval(temp)
+        }
     }, [])
 
-    function connectToWs(){
-        const wsT =new WebSocket('ws://localhost:4000')
-        wsT.addEventListener('message', handleMessage)
-        wsT.addEventListener('close',() => {
-            setTimeout(() => {
-                connectToWs()
-            },1000)
-        })
-        setWs(wsT)
-    }
+    // function connectToWs(){
+    //     const wsT =new WebSocket('ws://localhost:4000')
+    //     wsT.addEventListener('message', handleMessage)
+    //     wsT.addEventListener('close',() => {
+    //         setTimeout(() => {
+    //             connectToWs()
+    //         },1000)
+    //     })
+    //     setWs(wsT)
+    // }
 
     useEffect(() => {
         if(selectedId){
@@ -63,13 +77,13 @@ function Chat() {
         peopleArray.forEach(person => {
             people[person.userId] = person.username
         })
-        console.log(people)
+        // console.log(people)
         setOnlinePeople(people)
     }
 
     function handleMessage(e){
         const messageData = JSON.parse(e.data)
-        console.log(messageData);
+        // console.log(messageData);
         if('online' in messageData){
             showOnlinePeople(messageData.online)
         }
@@ -97,15 +111,22 @@ function Chat() {
     const onlinePeopleExcludingOurUser = {...onlinePeople}
     delete onlinePeopleExcludingOurUser[id]
 
+    function logout(){
+        axios.post('/logout').then(() =>{
+            setWs(null);
+            setUsername(null);
+            setId(null);
+        })
+    }
+
     // const messagesWithoutDupes = uniqBy(messages,'id')
     
 
   return (
     <div className="flex h-screen overflow-hidden">
-        <div className="bg-blue-100 w-1/3 overflow-x-scroll">
-            <div className="text-blue-600 font-bold flex gap-2 mb-2 p-4">
-            <Logo/>
-Find Friends</div>
+        <div className="bg-blue-100 w-1/3  flex flex-col">
+            <div className="flex-grow">
+            <Logo text = {"Find Friends"}/>
             {Object.keys(onlinePeopleExcludingOurUser).map(uId => {
                 return (<Contact 
                 key={uId}
@@ -127,6 +148,12 @@ Find Friends</div>
                 online={false}
                 />)
             })}
+            </div>
+            <div className="p-2 text-center">
+                {/* Links */}
+                <span className="p-2 mx-2">{username}</span>
+                <button className="text-sm text-black-300 bg-blue-200 p-2" onClick={logout}>Logout</button>
+            </div>
         </div>
         <div className="flex flex-col bg-blue-300 w-2/3 p-2">
             <div className="flex-grow overflow-y-auto">

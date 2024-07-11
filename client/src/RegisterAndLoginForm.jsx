@@ -9,10 +9,13 @@ function RegisterAndLoginForm() {
     const {setUsername: setLoggedInUsername, setId} = useContext(UserContext)
     async function handleSubmit(e){
         e.preventDefault()
+        console.log('In handle submit!')
         const url = isLoginOrRegister === 'Register'?'register':'login';
         const {data} = await axios.post(url , {username, password});
+        console.log(`data.id is ${data.id}`)    
         setLoggedInUsername(username)
         setId(data.id)
+        console.log('reached here!!')
     }
   return (
     <div className="bg-blue-50 h-screen flex items-center">

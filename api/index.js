@@ -31,11 +31,14 @@ app.get('/people',async (req,res) => {
 
 app.get('/profile',(req,res) => {
     const token = req.cookies?.token
+    console.log('cookies in /profile are '+JSON.stringify(req.cookies))
     if(token){
     jwt.verify(token, jwt_secret, {}, (err,userData) => {
         if(err) throw err;
         res.json(userData)
-    })}
+    })
+    // console.log('token in /profile is '+JSON.stringify(token))
+    }
     // else{
     //     res.status(401).json('No token')
     // }
@@ -60,7 +63,7 @@ app.get('/messages/:userId',async(req,res) =>{
     const {userId} = req.params;
     const userData = await getUserDataFromRequest(req)
     const ourUserId = userData.userId
-    console.log([userId, ourUserId])
+    // console.log([userId, ourUserId])
     const messages = await Message.find({
         sender: {$in: [userId, ourUserId]},
         recipient: {$in: [userId, ourUserId]}
@@ -77,12 +80,17 @@ app.post('/login',async (req,res)=>{
         jwt.sign({userId: foundUser._id, username: foundUser.username},jwt_secret,(err,token)=>{
             if(err)
                 throw err;
+            // console.log('successfully signed the cookie with token '+token)
             res.cookie('token',token,{sameSite:'none',secure: true}).json({
                 id: foundUser._id
             })
         })
     }
 }
+})
+
+app.post('/logout', (req,res)=>{
+    res.cookie('token',null,{sameSite:'none', secure: true}).json('ok')
 })
 
 app.post('/register',async (req,res) => {
@@ -94,7 +102,6 @@ app.post('/register',async (req,res) => {
             throw err;
         res.cookie('token',token,{sameSite: 'none', secure: true}).json({
             id: createdUser._id,
-        
         })
     })
 })
@@ -126,6 +133,7 @@ wss.on('connection', (connection,req) => {
         connection.ping();
         connection.deathTimer = setTimeout(() => {
             connection.isAlive = false;
+            clearInterval(connection.timer)
             connection.terminate();
             notifyAboutOnlinePeople()
         },1000)
@@ -135,22 +143,19 @@ wss.on('connection', (connection,req) => {
         clearInterval(connection.deathTimer)
     })
 
-    
-    console.log('connection request for ws received!')
-    console.log(req.headers)
     const cookies = req.headers.cookie;
     if(cookies){
         const tokenCookieString = cookies.split(';').find(cookie => cookie.startsWith('token='))
         // console.log(tokenCookieString)
-        if(tokenCookieString){
             const token = tokenCookieString.split('=')[1]
+            console.log('token is '+token)
             jwt.verify(token,jwt_secret,(err,userData) => {
                 if(err) throw err;
                 const {username, userId} = userData;
                 connection.username = username;
                 connection.userId = userId;
             })
-        }
+        
     }
 
     notifyAboutOnlinePeople()
