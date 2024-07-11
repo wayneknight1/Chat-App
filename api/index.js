@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 4000
 app.use(express.json()); // Add this line to parse JSON bodies
 app.use(cookieParser())
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from this origin
+  origin: true, // Allow requests from this origin
   credentials: true // Allow cookies to be sent
 }));
 
