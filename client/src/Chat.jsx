@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import Avatar from "./Avatar";
 import Logo from './Logo'
 import { useContext } from "react";
 import { UserContext } from "./UserContext";
@@ -16,12 +15,18 @@ function Chat() {
     const [newMessageText, setNewMessageText] = useState('');
     const [messages,setMessages] = useState([])
     const [messagesWithoutDupes, setMessagesWithoutDupes] = useState([]);
+    const selectedIdRef = useRef(null)
 
     const messagesBoxRef = useRef(null)
+
+    useEffect(() => {
+        selectedIdRef.current = selectedId
+    },[selectedId])
+
     useEffect(() => {
         let temp;
         function connectToWs(){
-            const wsT =new WebSocket('wss://chat-app-backend-5cfi.onrender.com')
+            const wsT =new WebSocket('http://localhost:4000') //Change this to the backend url
             wsT.addEventListener('message', handleMessage)
             wsT.addEventListener('close',() => {
                 temp = setTimeout(() => {
@@ -36,16 +41,7 @@ function Chat() {
         }
     }, [])
 
-    // function connectToWs(){
-    //     const wsT =new WebSocket('ws://localhost:4000')
-    //     wsT.addEventListener('message', handleMessage)
-    //     wsT.addEventListener('close',() => {
-    //         setTimeout(() => {
-    //             connectToWs()
-    //         },1000)
-    //     })
-    //     setWs(wsT)
-    // }
+
 
     useEffect(() => {
         if(selectedId){
@@ -87,9 +83,13 @@ function Chat() {
         if('online' in messageData){
             showOnlinePeople(messageData.online)
         }
-        else{
-            if(selectedId === messageData.sender){
-            setMessages(prev => [...prev, {...messageData}])}
+        else{    
+            console.log(`selectedId is ${selectedIdRef.current} and messageData.sender is ${messageData.sender}`)
+            //when we recieve message from the user in the conversation
+            if(selectedIdRef.current === messageData.sender){
+            setMessages(prev => {
+                console.log('inside the setterfunction - handle message');
+                return [...prev, {...messageData}]})}
         }
     }
 

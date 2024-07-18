@@ -37,7 +37,7 @@ const verifyJWT = (req, res, next) => {
             next();
         });
     } else {
-        return res.status(401).json({ error: 'No token provided' });
+        return res.status(401).json({ error: 'Please Login/ No token provided' });
     }
 };
 
@@ -54,11 +54,7 @@ app.get('/profile',verifyJWT,(req,res) => {
         if(err) throw err;
         res.json(userData)
     })
-    // console.log('token in /profile is '+JSON.stringify(token))
     }
-    // else{
-    //     res.status(401).json('No token')
-    // }
 })
 
 async function getUserDataFromRequest(req){
