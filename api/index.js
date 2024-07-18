@@ -129,7 +129,7 @@ const wss = new ws.Server({server})
 
 wss.on('connection', (connection,req) => {
     //read username and id from the from the cookie for connection
-
+    console.log('WebSocket connection established');
     function notifyAboutOnlinePeople(){
         [...wss.clients].forEach(client => {
             client.send(JSON.stringify(
@@ -173,16 +173,10 @@ wss.on('connection', (connection,req) => {
 
     notifyAboutOnlinePeople()
 
-    // [...wss.clients].forEach(client => {
-    //     client.send(JSON.stringify(
-    //         {
-    //             online: [...wss.clients].map(c => ({userId:c.userId, username: c.username}))
-    //         }
-    //     ))
-    // })
 
     connection.on('message',async (message) => {
         const messageData = JSON.parse(message.toString())
+        console.log('Message received from client:', messageData);
         const {recipient, text} = messageData;
         if(recipient && text){
          const messageDoc = await Message.create({
@@ -199,5 +193,7 @@ wss.on('connection', (connection,req) => {
             })))
         }
     } )
-
+    connection.on('error', (error) => {
+        console.error('WebSocket error:', error);
+    });;
 })

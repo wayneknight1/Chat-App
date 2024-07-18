@@ -79,7 +79,7 @@ function Chat() {
 
     function handleMessage(e){
         const messageData = JSON.parse(e.data)
-        // console.log(messageData);
+        console.log(`messageData in handleMessage callback is ${handleMessage}`);
         if('online' in messageData){
             showOnlinePeople(messageData.online)
         }
